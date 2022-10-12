@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  email           String   @unique @db.VarChar(255)
+  password        String
+  favoriteRecipes Recipe[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Recipe {
+  id                       Int                       @id @default(autoincrement())
+  title                    String                    @db.VarChar(255)
+  description              String?                   @db.Text()
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  ingredients              Ingredient[]
+  preparationInstrucations PreparationInstrucation[]
+  media                    Media?                    @relation(fields: [mediaId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  mediaId                  Int?
+  category                 Taxonomy?                 @relation("category", fields: [categoryId], references: [id])
+  categoryId               Int?
+  tags                     Taxonomy[]
+  users                    User[]
+}
+
+model Ingredient {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  recipe    Recipe   @relation(fields: [recipeId], references: [id])
+  recipeId  Int
+}
+
+model PreparationInstrucation {
+  id          Int      @id @default(autoincrement())
+  description String   @db.VarChar(255)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  recipe      Recipe   @relation(fields: [recipeId], references: [id])
+  recipeId    Int
+}
+
+model Media {
+  id      Int      @id @default(autoincrement())
+  path    String   @db.VarChar(255)
+  label   String   @db.VarChar(255)
+  Recipes Recipe[]
+}
+
+model Taxonomy {
+  id               Int          @id @default(autoincrement())
+  label            String       @db.VarChar(255)
+  taxonomyType     TaxonomyType @relation(fields: [taxonomyTypeId], references: [id])
+  taxonomyTypeId   Int
+  recipesByCategoy Recipe[]     @relation("category")
+  recipesByTags    Recipe[]
+}
+
+model TaxonomyType {
+  id         Int        @id @default(autoincrement())
+  label      String     @db.VarChar(255)
+  taxonomies Taxonomy[]
+}
